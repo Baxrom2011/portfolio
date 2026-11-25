@@ -1,0 +1,602 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Bahrom Kadirov</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: one fixed WebGL scene (liquid blue core, rings, particles) that travels between sections as you scroll; glass content sits on top. */
+:root {
+  --bg: #030a1c;
+  --bg-2: #06143a;
+  --fg: #eaf2ff;
+  --muted: #8fa9d6;
+  --blue: #2f6bff;
+  --sky: #3ea8ff;
+  --cyan: #5ee1ff;
+  --ice: #d4ecff;
+  --glass: rgba(22, 52, 128, 0.22);
+  --line: rgba(130, 180, 255, 0.22);
+  --font-display: "Syne", "Trebuchet MS", system-ui, sans-serif;
+  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 40px;
+  overflow-x: hidden;
+}
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+.wrap { max-width: 1160px; margin: 0 auto; }
+
+/* scene layers */
+#gl { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.mesh {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(60% 50% at 85% 8%, rgba(47, 107, 255, 0.28), transparent 70%),
+    radial-gradient(50% 45% at 8% 70%, rgba(62, 168, 255, 0.16), transparent 70%),
+    radial-gradient(70% 60% at 50% 120%, rgba(94, 225, 255, 0.12), transparent 70%);
+}
+.glow {
+  position: fixed; left: 0; top: 0; width: 560px; height: 560px; margin: -280px 0 0 -280px; z-index: 0; pointer-events: none;
+  border-radius: 50%; background: radial-gradient(circle, rgba(62, 168, 255, 0.2), transparent 65%);
+  mix-blend-mode: screen; opacity: 0; transition: opacity 0.4s;
+}
+.progress { position: fixed; left: 0; right: 0; top: env(safe-area-inset-top, 0px); height: 3px; z-index: 30; transform-origin: 0 50%; transform: scaleX(0); background: linear-gradient(90deg, var(--blue), var(--cyan)); }
+main, .nav, footer { position: relative; z-index: 2; }
+
+/* nav */
+.nav {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); z-index: 20;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-top: calc(env(safe-area-inset-top, 0px) * 0 + 14px);
+  padding: 8px 8px 8px 20px; border-radius: 999px;
+  background: rgba(8, 22, 62, 0.55); border: 1px solid var(--line);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+}
+.brand { font-family: var(--font-display); font-weight: 800; font-size: 15px; letter-spacing: 0.06em; text-decoration: none; white-space: nowrap; }
+.brand i { font-style: normal; color: var(--cyan); }
+.links { display: flex; gap: 4px; }
+.links a { text-decoration: none; font-size: 14px; font-weight: 500; color: var(--muted); padding: 9px 14px; border-radius: 999px; transition: color 0.2s, background 0.2s; }
+.links a:hover { color: var(--fg); background: rgba(94, 160, 255, 0.14); }
+.lang { display: inline-flex; border-radius: 999px; padding: 3px; gap: 2px; background: rgba(94, 160, 255, 0.12); }
+.lang button { font: 700 12px/1 var(--font-body); letter-spacing: 0.08em; color: var(--muted); background: transparent; border: 0; border-radius: 999px; padding: 9px 13px; cursor: pointer; }
+.lang button[aria-pressed="true"] { background: linear-gradient(135deg, var(--blue), var(--sky)); color: #fff; }
+
+/* hero */
+.hero { min-height: calc(100svh - 80px); display: flex; flex-direction: column; justify-content: center; padding-block: 56px 72px; position: relative; }
+.eyebrow { display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cyan); font-weight: 700; margin: 0 0 22px; padding: 8px 16px; border: 1px solid var(--line); border-radius: 999px; background: rgba(8, 22, 62, 0.45); }
+.eyebrow::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 12px var(--cyan); animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.35; transform: scale(0.7); } }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(44px, 9vw, 120px); line-height: 0.95; letter-spacing: -0.03em; margin: 0 0 26px; }
+.word { display: inline-block; overflow: hidden; padding-bottom: 0.12em; margin-bottom: -0.12em; }
+.ch { display: inline-block; animation: rise 1s cubic-bezier(0.2, 0.9, 0.2, 1) both; animation-delay: calc(var(--i) * 55ms + 120ms); }
+.w2 .ch { color: transparent; -webkit-text-stroke: 1.5px var(--cyan); }
+@keyframes rise { from { transform: translateY(105%) rotate(7deg); } to { transform: none; } }
+.motto { font-family: var(--font-display); font-weight: 600; font-size: clamp(20px, 3vw, 32px); line-height: 1.25; margin: 0 0 20px; }
+.motto em { font-style: normal; background: linear-gradient(100deg, var(--sky), var(--cyan)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lead { color: var(--muted); max-width: 54ch; margin: 0 0 34px; }
+.cta { display: flex; flex-wrap: wrap; gap: 14px; }
+.btn { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; cursor: pointer; font: 700 15px/1 var(--font-body); padding: 17px 26px; border-radius: 999px; border: 1px solid transparent; transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.2, 1), box-shadow 0.25s; will-change: transform; }
+.btn.primary { background: linear-gradient(135deg, var(--blue), var(--sky)); color: #fff; box-shadow: 0 10px 40px -10px rgba(47, 107, 255, 0.9); }
+.btn.primary:hover { box-shadow: 0 14px 50px -8px rgba(62, 168, 255, 1); }
+.btn.ghost { background: rgba(8, 22, 62, 0.45); color: var(--fg); border-color: var(--line); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.btn.ghost:hover { border-color: var(--cyan); }
+.scroll { position: absolute; left: 0; bottom: 20px; display: flex; align-items: center; gap: 14px; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
+.scroll span.bar { width: 1px; height: 44px; background: linear-gradient(var(--cyan), transparent); transform-origin: top; animation: drip 2s ease-in-out infinite; }
+@keyframes drip { 0% { transform: scaleY(0); } 50% { transform: scaleY(1); } 100% { transform: scaleY(1); opacity: 0; } }
+
+/* marquee */
+.marquee { overflow: hidden; margin-block: 28px; mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); }
+.track { display: flex; gap: 48px; width: max-content; animation: slide 36s linear infinite; font-family: var(--font-display); font-weight: 800; font-size: clamp(38px, 7vw, 84px); line-height: 1.1; white-space: nowrap; color: transparent; -webkit-text-stroke: 1.2px rgba(130, 190, 255, 0.55); }
+.track b { color: var(--cyan); -webkit-text-stroke: 0; font-weight: 800; }
+.marquee.rev .track { animation-direction: reverse; animation-duration: 44s; }
+.marquee.chips .track { font-family: var(--font-body); font-weight: 700; font-size: clamp(16px, 2vw, 20px); -webkit-text-stroke: 0; color: var(--muted); gap: 14px; }
+.chip { padding: 12px 22px; border: 1px solid var(--line); border-radius: 999px; background: rgba(8, 22, 62, 0.5); }
+@keyframes slide { to { transform: translateX(-50%); } }
+
+/* sections */
+section { padding-block: 110px 20px; min-height: 70svh; display: flex; flex-direction: column; justify-content: center; }
+.kicker { font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--cyan); font-weight: 700; margin: 0 0 16px; }
+h2 { font-family: var(--font-display); font-weight: 800; font-size: clamp(32px, 5.4vw, 64px); line-height: 1.02; letter-spacing: -0.02em; margin: 0 0 22px; text-wrap: balance; }
+.about { align-items: flex-end; }
+.about .col { max-width: 560px; }
+.about p.body { color: var(--muted); margin: 0 0 18px; }
+.quote { margin-top: 28px; padding: 22px 24px; border-radius: 22px; border: 1px solid var(--line); background: var(--glass); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); font-family: var(--font-display); font-weight: 600; font-size: 22px; line-height: 1.3; }
+.quote em { font-style: normal; color: var(--cyan); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; margin-top: 28px; }
+.card {
+  position: relative; min-width: 0; padding: 30px 28px 32px; border-radius: 28px; overflow: hidden;
+  background: var(--glass); border: 1px solid var(--line);
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.25s ease-out, border-color 0.3s;
+}
+.card::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 0%), rgba(94, 225, 255, 0.22), transparent 70%); opacity: 0; transition: opacity 0.3s; }
+.card:hover { border-color: rgba(94, 225, 255, 0.6); }
+.card:hover::before { opacity: 1; }
+.card .ic { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; margin-bottom: 22px; background: linear-gradient(135deg, rgba(47, 107, 255, 0.5), rgba(94, 225, 255, 0.25)); border: 1px solid var(--line); }
+.card .ic svg { width: 26px; height: 26px; stroke: var(--ice); fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.card h3 { font-family: var(--font-display); font-weight: 600; font-size: 21px; line-height: 1.2; margin: 0 0 10px; }
+.card p { margin: 0; color: var(--muted); font-size: 16px; }
+
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin-top: 28px; }
+.step .n { font-family: var(--font-display); font-weight: 800; font-size: 56px; line-height: 1; margin-bottom: 14px; color: transparent; -webkit-text-stroke: 1.3px var(--cyan); }
+.process { align-items: flex-start; }
+
+.contact-card { border-radius: 36px; padding: clamp(28px, 6vw, 72px); text-align: center; background: linear-gradient(160deg, rgba(47, 107, 255, 0.34), rgba(8, 22, 62, 0.55)); border: 1px solid var(--line); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+.contact-card h2 { margin-inline: auto; max-width: 14ch; }
+.contact-card p.sub { color: var(--muted); max-width: 46ch; margin: 0 auto; }
+.handle { font-family: var(--font-display); font-weight: 800; font-size: clamp(30px, 7vw, 76px); letter-spacing: -0.02em; margin: 26px 0 30px; background: linear-gradient(100deg, var(--ice), var(--cyan) 45%, var(--sky)); -webkit-background-clip: text; background-clip: text; color: transparent; word-break: break-all; }
+.contact-card .cta { justify-content: center; }
+
+footer { padding-block: 56px 8px; display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; color: var(--muted); font-size: 14px; }
+footer strong { font-family: var(--font-display); font-weight: 600; color: var(--fg); }
+
+/* reveal: starts readable, then glides in */
+[data-rv] { opacity: 0.3; translate: 0 38px; filter: blur(5px); transition: opacity 1s cubic-bezier(0.2, 0.9, 0.2, 1), translate 1s cubic-bezier(0.2, 0.9, 0.2, 1), filter 1s; transition-delay: var(--d, 0s); }
+[data-rv].in { opacity: 1; translate: 0 0; filter: none; }
+
+@media (max-width: 820px) {
+  .links { display: none; }
+  .about { align-items: flex-start; }
+  section { padding-block: 90px 10px; }
+  .scroll { display: none; }
+  .hero { padding-block: 40px 56px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .ch, .track, .eyebrow::before, .scroll span.bar { animation: none; }
+  [data-rv] { opacity: 1; translate: 0 0; filter: none; transition: none; }
+  .card { transition: none; }
+}
+</style>
+
+<canvas id="gl" aria-hidden="true"></canvas>
+<div class="mesh" aria-hidden="true"></div>
+<div class="glow" id="glow" aria-hidden="true"></div>
+<div class="progress" id="progress" aria-hidden="true"></div>
+<audio id="bgMusic" autoplay loop>
+  <source src="pion.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+const music = document.getElementById("bgMusic");
+
+music.volume = 0.25;
+
+window.addEventListener("load", () => {
+  music.play().catch(() => {
+    document.addEventListener("click", () => {
+      music.play();
+    }, { once: true });
+  });
+});
+</script>
+<div class="wrap">
+  <nav class="nav" aria-label="Main">
+    <a class="brand" href="#top">BAHROM<i>.</i>KADIROV</a>
+    <div class="links">
+      <a href="#about" data-i18n="nAbout">Men haqimda</a>
+      <a href="#services" data-i18n="nServices">Xizmatlar</a>
+      <a href="#process" data-i18n="nProcess">Jarayon</a>
+      <a href="#contact" data-i18n="nContact">Aloqa</a>
+    </div>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" id="lang-uz" aria-pressed="true">UZ</button>
+      <button type="button" id="lang-en" aria-pressed="false">EN</button>
+    </div>
+  </nav>
+
+
+  <main id="top">
+    <section class="hero" id="hero" data-sec>
+      <p class="eyebrow" data-i18n="role">Dasturchi</p>
+      <h1 id="title">Bahrom Kadirov</h1>
+      <p class="motto">We never stop your <em>Dream</em></p>
+      <p class="lead" data-i18n="lead">G'oyangizni kodga, kodni esa jonli 3D tajribaga aylantiraman. Sayt, animatsiya va video, hammasi bir qo'ldan.</p>
+      <div class="cta">
+        <a class="btn primary magnetic" href="https://t.me/ikbd14" target="_blank" rel="noopener"><span data-i18n="ctaWrite">Telegramda yozish</span> &rarr;</a>
+        <a class="btn ghost magnetic" href="#services" data-i18n="ctaWork">Nima qilaman</a>
+      </div>
+      <div class="scroll" aria-hidden="true"><span class="bar"></span><span data-i18n="scroll">Pastga suring</span></div>
+    </section>
+
+    <div class="marquee" aria-hidden="true"><div class="track" id="m1"></div></div>
+
+    <section class="about" id="about" data-sec>
+      <div class="col">
+        <p class="kicker" data-rv data-i18n="aKick">Men haqimda</p>
+        <h2 data-rv style="--d:.08s" data-i18n="aTitle">Dreamlarni kodda quraman</h2>
+        <p class="body" data-rv style="--d:.16s" data-i18n="aP1">Men Bahrom, dasturchiman. Menga g'oyani ko'zga ko'rinadigan va harakatlanadigan narsaga aylantirish yoqadi: sayt, 3D sahna yoki video.</p>
+        <p class="body" data-rv style="--d:.24s" data-i18n="aP2">Har bir loyihada tafsilotga e'tibor beraman, shunda natija chiroyli ham, tez ham bo'ladi.</p>
+        <div class="quote" data-rv style="--d:.32s">We never stop your <em>Dream</em></div>
+      </div>
+    </section>
+
+    <section id="services" data-sec>
+      <p class="kicker" data-rv data-i18n="sKick">Xizmatlar</p>
+      <h2 data-rv style="--d:.08s" data-i18n="sTitle">Nimalar yarataman</h2>
+      <div class="grid">
+        <article class="card" data-rv>
+          <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg></div>
+          <h3 data-i18n="s1t">Veb-saytlar</h3>
+          <p data-i18n="s1p">Tez, chiroyli va telefonga mos saytlar.</p>
+        </article>
+        <article class="card" data-rv style="--d:.1s">
+          <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg></div>
+          <h3 data-i18n="s2t">3D va animatsiya</h3>
+          <p data-i18n="s2p">Three.js bilan jonli 3D sahnalar va silliq harakatlar.</p>
+        </article>
+        <article class="card" data-rv style="--d:.2s">
+          <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="14" height="14" rx="2"/><path d="M17 10l4-2v8l-4-2"/></svg></div>
+          <h3 data-i18n="s3t">Video avtomatlashtirish</h3>
+          <p data-i18n="s3p">HTML animatsiyani kadrlarga ajratib, FFmpeg orqali MP4 qilaman.</p>
+        </article>
+        <article class="card" data-rv style="--d:.3s">
+          <div class="ic"><svg viewBox="0 0 24 24"><path d="M5 19c0-8 6-14 14-14 0 8-6 14-14 14z"/><path d="M5 19l6-6"/></svg></div>
+          <h3 data-i18n="s4t">G'oyadan mahsulotgacha</h3>
+          <p data-i18n="s4p">Dreamingizni rejadan ishlaydigan loyihagacha olib boraman.</p>
+        </article>
+      </div>
+    </section>
+
+    <div class="marquee chips rev" aria-hidden="true"><div class="track" id="m2"></div></div>
+
+    <section class="process" id="process" data-sec>
+      <p class="kicker" data-rv data-i18n="pKick">Jarayon</p>
+      <h2 data-rv style="--d:.08s" data-i18n="pTitle">Uch qadamda tayyor</h2>
+      <div class="steps">
+        <div class="card step" data-rv>
+          <div class="n">01</div>
+          <h3 data-i18n="p1t">Dream</h3>
+          <p data-i18n="p1p">G'oyangizni tinglayman va maqsadni aniqlaymiz.</p>
+        </div>
+        <div class="card step" data-rv style="--d:.12s">
+          <div class="n">02</div>
+          <h3 data-i18n="p2t">Kod</h3>
+          <p data-i18n="p2p">Loyihani yarataman va jarayonni sizga ko'rsatib boraman.</p>
+        </div>
+        <div class="card step" data-rv style="--d:.24s">
+          <div class="n">03</div>
+          <h3 data-i18n="p3t">Ishga tushirish</h3>
+          <p data-i18n="p3p">Tayyor natijani topshiraman va chiqarishda yordam beraman.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" data-sec>
+      <div class="contact-card" data-rv>
+        <p class="kicker" data-i18n="cKick">Aloqa</p>
+        <h2 data-i18n="cTitle">Dreamingizni boshlaymizmi?</h2>
+        <p class="sub" data-i18n="cLead">Loyiha yoki g'oya bo'lsa, Telegramda yozing.</p>
+        <p class="handle" id="handle">@ikbd14</p>
+        <div class="cta">
+          <a class="btn primary magnetic" href="https://t.me/ikbd14" target="_blank" rel="noopener"><span data-i18n="ctaOpen">Telegramni ochish</span> &rarr;</a>
+          <button class="btn ghost magnetic" type="button" id="copy"><span id="copy-label" data-i18n="copy">Nikni nusxalash</span></button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <strong>We never stop your Dream</strong>
+    <span>&copy; 2026 Bahrom Kadirov</span>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var coarse = window.matchMedia("(pointer: coarse)").matches;
+
+  /* ---------- language ---------- */
+  var T = {
+    uz: {
+      nAbout: "Men haqimda", nServices: "Xizmatlar", nProcess: "Jarayon", nContact: "Aloqa",
+      role: "Dasturchi",
+      lead: "G'oyangizni kodga, kodni esa jonli 3D tajribaga aylantiraman. Sayt, animatsiya va video, hammasi bir qo'ldan.",
+      ctaWrite: "Telegramda yozish", ctaWork: "Nima qilaman", scroll: "Pastga suring",
+      aKick: "Men haqimda", aTitle: "Dreamlarni kodda quraman",
+      aP1: "Men Bahrom, dasturchiman. Menga g'oyani ko'zga ko'rinadigan va harakatlanadigan narsaga aylantirish yoqadi: sayt, 3D sahna yoki video.",
+      aP2: "Har bir loyihada tafsilotga e'tibor beraman, shunda natija chiroyli ham, tez ham bo'ladi.",
+      sKick: "Xizmatlar", sTitle: "Nimalar yarataman",
+      s1t: "Veb-saytlar", s1p: "Tez, chiroyli va telefonga mos saytlar.",
+      s2t: "3D va animatsiya", s2p: "Three.js bilan jonli 3D sahnalar va silliq harakatlar.",
+      s3t: "Video avtomatlashtirish", s3p: "HTML animatsiyani kadrlarga ajratib, FFmpeg orqali MP4 qilaman.",
+      s4t: "G'oyadan mahsulotgacha", s4p: "Dreamingizni rejadan ishlaydigan loyihagacha olib boraman.",
+      pKick: "Jarayon", pTitle: "Uch qadamda tayyor",
+      p1t: "Dream", p1p: "G'oyangizni tinglayman va maqsadni aniqlaymiz.",
+      p2t: "Kod", p2p: "Loyihani yarataman va jarayonni sizga ko'rsatib boraman.",
+      p3t: "Ishga tushirish", p3p: "Tayyor natijani topshiraman va chiqarishda yordam beraman.",
+      cKick: "Aloqa", cTitle: "Dreamingizni boshlaymizmi?", cLead: "Loyiha yoki g'oya bo'lsa, Telegramda yozing.",
+      ctaOpen: "Telegramni ochish", copy: "Nikni nusxalash", copied: "Nusxalandi"
+    },
+    en: {
+      nAbout: "About", nServices: "Services", nProcess: "Process", nContact: "Contact",
+      role: "Developer",
+      lead: "I turn your idea into code, and code into a live 3D experience. Websites, animation and video, all from one hand.",
+      ctaWrite: "Message on Telegram", ctaWork: "What I do", scroll: "Scroll down",
+      aKick: "About", aTitle: "I build dreams in code",
+      aP1: "I'm Bahrom, a developer. I like turning an idea into something you can see and that moves: a website, a 3D scene or a video.",
+      aP2: "I care about details in every project, so the result is both beautiful and fast.",
+      sKick: "Services", sTitle: "What I build",
+      s1t: "Websites", s1p: "Fast, beautiful, mobile-friendly websites.",
+      s2t: "3D and animation", s2p: "Live 3D scenes and smooth motion with Three.js.",
+      s3t: "Video automation", s3p: "I split HTML animation into frames and export MP4 with FFmpeg.",
+      s4t: "Idea to product", s4p: "I take your dream from a plan to a working project.",
+      pKick: "Process", pTitle: "Done in three steps",
+      p1t: "Dream", p1p: "I listen to your idea and we define the goal.",
+      p2t: "Code", p2p: "I build the project and show you progress along the way.",
+      p3t: "Launch", p3p: "I hand over the result and help you go live.",
+      cKick: "Contact", cTitle: "Ready to start your Dream?", cLead: "Have a project or an idea? Write on Telegram.",
+      ctaOpen: "Open Telegram", copy: "Copy handle", copied: "Copied"
+    }
+  };
+  var lang = "uz";
+  try { var sv = localStorage.getItem("bk-lang"); if (sv === "uz" || sv === "en") lang = sv; } catch (e) {}
+  function apply(l) {
+    lang = l;
+    document.documentElement.lang = l;
+    document.querySelectorAll("[data-i18n]").forEach(function (el) {
+      var v = T[l][el.getAttribute("data-i18n")]; if (v) el.textContent = v;
+    });
+    document.getElementById("lang-uz").setAttribute("aria-pressed", String(l === "uz"));
+    document.getElementById("lang-en").setAttribute("aria-pressed", String(l === "en"));
+    try { localStorage.setItem("bk-lang", l); } catch (e) {}
+  }
+  document.getElementById("lang-uz").addEventListener("click", function () { apply("uz"); });
+  document.getElementById("lang-en").addEventListener("click", function () { apply("en"); });
+  apply(lang);
+
+  /* ---------- title letters ---------- */
+  (function () {
+    var h = document.getElementById("title"), txt = h.textContent.trim(), i = 0;
+    h.setAttribute("aria-label", txt); h.textContent = "";
+    txt.split(" ").forEach(function (w, wi) {
+      var word = document.createElement("span"); word.className = "word w" + (wi + 1); word.setAttribute("aria-hidden", "true");
+      w.split("").forEach(function (c) { var s = document.createElement("span"); s.className = "ch"; s.style.setProperty("--i", i++); s.textContent = c; word.appendChild(s); });
+      h.appendChild(word); if (wi === 0) h.appendChild(document.createElement("br"));
+    });
+  })();
+
+  /* ---------- marquees ---------- */
+  function fill(id, items, cls) {
+    var h = "";
+    for (var r = 0; r < 4; r++) items.forEach(function (s) { h += cls ? '<span class="chip">' + s + "</span>" : "<span>" + s + "</span><b>&#9670;</b>"; });
+    document.getElementById(id).innerHTML = h;
+  }
+  fill("m1", ["We never stop your Dream"], false);
+  fill("m2", ["HTML", "CSS", "JavaScript", "Three.js", "WebGL", "FFmpeg", "3D", "Animation"], true);
+
+  /* ---------- copy ---------- */
+  document.getElementById("copy").addEventListener("click", function () {
+    var label = document.getElementById("copy-label");
+    function done() { label.textContent = T[lang].copied; setTimeout(function () { label.textContent = T[lang].copy; }, 1600); }
+    function fb() { var r = document.createRange(); r.selectNodeContents(document.getElementById("handle")); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); }
+    try { navigator.clipboard.writeText("@ikbd14").then(done, fb); } catch (e) { fb(); }
+  });
+
+  /* ---------- reveal ---------- */
+  var rv = document.querySelectorAll("[data-rv]");
+  if ("IntersectionObserver" in window && !reduce) {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }); }, { threshold: 0.12 });
+    rv.forEach(function (el) { io.observe(el); });
+  } else { rv.forEach(function (el) { el.classList.add("in"); }); }
+
+  /* ---------- tilt cards and magnetic buttons ---------- */
+  if (!coarse && !reduce) {
+    document.querySelectorAll(".card").forEach(function (c) {
+      c.addEventListener("pointermove", function (e) {
+        var r = c.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+        c.style.setProperty("--mx", x * 100 + "%"); c.style.setProperty("--my", y * 100 + "%");
+        c.style.setProperty("--ry", (x - 0.5) * 12 + "deg"); c.style.setProperty("--rx", (0.5 - y) * 12 + "deg");
+      });
+      c.addEventListener("pointerleave", function () { c.style.setProperty("--rx", "0deg"); c.style.setProperty("--ry", "0deg"); });
+    });
+    document.querySelectorAll(".magnetic").forEach(function (b) {
+      b.addEventListener("pointermove", function (e) {
+        var r = b.getBoundingClientRect();
+        b.style.transform = "translate(" + (e.clientX - r.left - r.width / 2) * 0.22 + "px," + (e.clientY - r.top - r.height / 2) * 0.3 + "px)";
+      });
+      b.addEventListener("pointerleave", function () { b.style.transform = ""; });
+    });
+  }
+
+  /* ---------- progress + cursor glow ---------- */
+  var prog = document.getElementById("progress"), glow = document.getElementById("glow");
+  var gx = 0, gy = 0, gtx = 0, gty = 0;
+  function scrollP() { var m = document.documentElement.scrollHeight - window.innerHeight; return m > 0 ? Math.min(1, Math.max(0, window.scrollY / m)) : 0; }
+  window.addEventListener("scroll", function () { prog.style.transform = "scaleX(" + scrollP() + ")"; }, { passive: true });
+  if (!coarse) window.addEventListener("pointermove", function (e) { gtx = e.clientX; gty = e.clientY; glow.style.opacity = 1; });
+
+  /* ---------- 3D scene ---------- */
+  var canvas = document.getElementById("gl");
+  var NOISE = [
+    "vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}",
+    "vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}",
+    "vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}",
+    "vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}",
+    "float snoise(vec3 v){",
+    "const vec2 C=vec2(1.0/6.0,1.0/3.0);const vec4 D=vec4(0.0,0.5,1.0,2.0);",
+    "vec3 i=floor(v+dot(v,C.yyy));vec3 x0=v-i+dot(i,C.xxx);",
+    "vec3 g=step(x0.yzx,x0.xyz);vec3 l=1.0-g;vec3 i1=min(g.xyz,l.zxy);vec3 i2=max(g.xyz,l.zxy);",
+    "vec3 x1=x0-i1+C.xxx;vec3 x2=x0-i2+C.yyy;vec3 x3=x0-D.yyy;",
+    "i=mod289(i);",
+    "vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));",
+    "float n_=0.142857142857;vec3 ns=n_*D.wyz-D.xzx;",
+    "vec4 j=p-49.0*floor(p*ns.z*ns.z);vec4 x_=floor(j*ns.z);vec4 y_=floor(j-7.0*x_);",
+    "vec4 x=x_*ns.x+ns.yyyy;vec4 y=y_*ns.x+ns.yyyy;vec4 h=1.0-abs(x)-abs(y);",
+    "vec4 b0=vec4(x.xy,y.xy);vec4 b1=vec4(x.zw,y.zw);",
+    "vec4 s0=floor(b0)*2.0+1.0;vec4 s1=floor(b1)*2.0+1.0;vec4 sh=-step(h,vec4(0.0));",
+    "vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;",
+    "vec3 p0=vec3(a0.xy,h.x);vec3 p1=vec3(a0.zw,h.y);vec3 p2=vec3(a1.xy,h.z);vec3 p3=vec3(a1.zw,h.w);",
+    "vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));",
+    "p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;",
+    "vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0);m=m*m;",
+    "return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));}"
+  ].join("\n");
+
+  var VERT = NOISE + [
+    "uniform float uTime;uniform float uAmp;",
+    "varying vec3 vNormal;varying vec3 vView;varying float vN;",
+    "float field(vec3 p){return snoise(p*1.25+vec3(0.0,uTime*0.35,uTime*0.2));}",
+    "void main(){",
+    "float n=field(position);vN=n;",
+    "float e=0.04;",
+    "vec3 g=vec3(field(position+vec3(e,0.0,0.0))-n,field(position+vec3(0.0,e,0.0))-n,field(position+vec3(0.0,0.0,e))-n)/e;",
+    "vec3 nn=normalize(normal-uAmp*(g-dot(g,normal)*normal));",
+    "vec3 p=position+normal*n*uAmp;",
+    "vec4 mv=modelViewMatrix*vec4(p,1.0);",
+    "vNormal=normalize(normalMatrix*nn);vView=-mv.xyz;",
+    "gl_Position=projectionMatrix*mv;}"
+  ].join("\n");
+
+  var FRAG_SOLID = [
+    "varying vec3 vNormal;varying vec3 vView;varying float vN;uniform float uTime;",
+    "void main(){",
+    "vec3 N=normalize(vNormal);vec3 V=normalize(vView);",
+    "float f=pow(1.0-max(dot(N,V),0.0),2.4);",
+    "vec3 deep=vec3(0.01,0.05,0.30);vec3 mid=vec3(0.10,0.42,1.00);vec3 hi=vec3(0.45,0.92,1.00);",
+    "vec3 col=mix(deep,mid,smoothstep(-0.7,0.8,vN));",
+    "vec3 L=normalize(vec3(0.5,0.8,0.7));",
+    "float diff=max(dot(N,L),0.0);",
+    "col*=0.55+diff*0.9;",
+    "float spec=pow(max(dot(reflect(-L,N),V),0.0),32.0);",
+    "col+=hi*f*0.9+vec3(0.8,0.95,1.0)*spec*0.6;",
+    "gl_FragColor=vec4(col,1.0);}"
+  ].join("\n");
+
+  var FRAG_WIRE = [
+    "varying vec3 vNormal;varying vec3 vView;varying float vN;",
+    "void main(){float f=pow(1.0-max(dot(normalize(vNormal),normalize(vView)),0.0),1.6);",
+    "gl_FragColor=vec4(0.55,0.9,1.0,0.1+f*0.5);}"
+  ].join("\n");
+
+  try {
+    if (typeof THREE === "undefined") throw new Error("no three");
+    var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    camera.position.set(0, 0, 9);
+
+    var core = new THREE.Group(); scene.add(core);
+    var uniforms = { uTime: { value: 0 }, uAmp: { value: 0.42 } };
+    var solid = new THREE.Mesh(new THREE.IcosahedronGeometry(1.6, 6), new THREE.ShaderMaterial({ vertexShader: VERT, fragmentShader: FRAG_SOLID, uniforms: uniforms }));
+    core.add(solid);
+    var wire = new THREE.Mesh(new THREE.IcosahedronGeometry(1.6, 3), new THREE.ShaderMaterial({ vertexShader: VERT, fragmentShader: FRAG_WIRE, uniforms: uniforms, wireframe: true, transparent: true, depthWrite: false }));
+    wire.scale.setScalar(1.12); core.add(wire);
+
+    var rings = [];
+    [[2.55, 0.012, 0x5ee1ff, 1.1, 0.2], [3.1, 0.008, 0x3ea8ff, 0.4, -1.0], [3.7, 0.006, 0x9fd8ff, 1.45, 0.7]].forEach(function (d, i) {
+      var m = new THREE.Mesh(new THREE.TorusGeometry(d[0], d[1], 8, 160), new THREE.MeshBasicMaterial({ color: d[2], transparent: true, opacity: 0.8 - i * 0.2 }));
+      m.rotation.set(d[3], d[4], 0); m.userData.sp = 0.12 + i * 0.07; core.add(m); rings.push(m);
+    });
+    var orbiters = [];
+    for (var k = 0; k < 3; k++) {
+      var o = new THREE.Mesh(new THREE.OctahedronGeometry(0.1), new THREE.MeshBasicMaterial({ color: 0xd4ecff }));
+      o.userData = { r: 2.55 + k * 0.55, a: k * 2.1, sp: 0.6 - k * 0.12, t: k * 0.9 }; core.add(o); orbiters.push(o);
+    }
+
+    /* particles */
+    var N = coarse ? 900 : 1700, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), c1 = new THREE.Color(0x3ea8ff), c2 = new THREE.Color(0x5ee1ff), c3 = new THREE.Color(0xffffff);
+    for (var i = 0; i < N; i++) {
+      pos[i * 3] = (Math.random() - 0.5) * 34; pos[i * 3 + 1] = (Math.random() - 0.5) * 44; pos[i * 3 + 2] = -14 + Math.random() * 20;
+      var c = Math.random() < 0.15 ? c3 : Math.random() < 0.5 ? c1 : c2;
+      col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
+    }
+    var pg = new THREE.BufferGeometry();
+    pg.setAttribute("position", new THREE.BufferAttribute(pos, 3)); pg.setAttribute("color", new THREE.BufferAttribute(col, 3));
+    var points = new THREE.Points(pg, new THREE.PointsMaterial({ size: 0.055, vertexColors: true, transparent: true, opacity: 0.85, depthWrite: false, blending: THREE.AdditiveBlending }));
+    scene.add(points);
+
+    /* drifting crystals */
+    var crystals = [];
+    for (var q = 0; q < 9; q++) {
+      var cr = new THREE.Mesh(q % 2 ? new THREE.OctahedronGeometry(0.34) : new THREE.IcosahedronGeometry(0.3), new THREE.MeshBasicMaterial({ color: q % 3 ? 0x3ea8ff : 0x5ee1ff, wireframe: true, transparent: true, opacity: 0.6 }));
+      cr.userData = { x: (Math.random() - 0.5) * 16, y: (Math.random() - 0.5) * 30, z: -6 + Math.random() * 7, s: 0.2 + Math.random() * 0.6, depth: 0.5 + Math.random() * 1.2 };
+      scene.add(cr); crystals.push(cr);
+    }
+
+    /* section keyframes: x, y, z, scale (desktop / mobile) */
+    var KD = [[2.5, 0.0, 0, 1.15], [-2.7, 0, -0.5, 1.0], [0, 0, -3.2, 1.7], [2.7, 0, -0.5, 0.95], [0, 0, -2.2, 1.5]];
+    var KM = [[0, 2.3, -1, 0.8], [0.6, 2.4, -2, 0.7], [0, 2.6, -4, 0.9], [-0.6, 2.4, -2, 0.7], [0, 2.6, -3, 0.9]];
+    var secs = [].slice.call(document.querySelectorAll("[data-sec]")), centers = [];
+    function measure() { centers = secs.map(function (s) { var r = s.getBoundingClientRect(); return r.top + window.scrollY + r.height / 2; }); }
+    function fidx() {
+      var y = window.scrollY + window.innerHeight * 0.5;
+      if (y <= centers[0]) return 0;
+      for (var i = 0; i < centers.length - 1; i++) if (y < centers[i + 1]) return i + (y - centers[i]) / (centers[i + 1] - centers[i]);
+      return centers.length - 1;
+    }
+    function ease(t) { return t * t * (3 - 2 * t); }
+
+    var W = 1, H = 1;
+    function resize() {
+      W = window.innerWidth; H = window.innerHeight;
+      renderer.setSize(W, H, false); camera.aspect = W / H; camera.updateProjectionMatrix(); measure();
+    }
+    resize(); window.addEventListener("resize", resize);
+    window.addEventListener("load", measure);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+
+    var mx = 0, my = 0, tx = 0, ty = 0, cur = { x: 0, y: 0, z: 0, s: 1 }, clock = new THREE.Clock(), lastY = window.scrollY, vel = 0;
+    window.addEventListener("pointermove", function (e) { tx = (e.clientX / W) * 2 - 1; ty = (e.clientY / H) * 2 - 1; });
+
+    function frame() {
+      var t = reduce ? 3.2 : clock.getElapsedTime();
+      uniforms.uTime.value = t;
+      var mobile = W / H < 0.9, K = mobile ? KM : KD;
+      var f = fidx(), i0 = Math.min(Math.floor(f), K.length - 2), u = ease(Math.min(1, f - i0));
+      var a = K[i0], b = K[i0 + 1];
+      var target = { x: a[0] + (b[0] - a[0]) * u, y: a[1] + (b[1] - a[1]) * u, z: a[2] + (b[2] - a[2]) * u, s: a[3] + (b[3] - a[3]) * u };
+      var k = reduce ? 1 : 0.07;
+      cur.x += (target.x - cur.x) * k; cur.y += (target.y - cur.y) * k; cur.z += (target.z - cur.z) * k; cur.s += (target.s - cur.s) * k;
+      mx += (tx - mx) * 0.05; my += (ty - my) * 0.05;
+
+      var dy = window.scrollY - lastY; lastY = window.scrollY; vel += (Math.min(Math.abs(dy), 60) / 60 - vel) * 0.08;
+      uniforms.uAmp.value = 0.38 + vel * 0.45;
+
+      core.position.set(cur.x + mx * 0.25, cur.y - my * 0.2 + Math.sin(t * 0.9) * 0.08, cur.z);
+      core.scale.setScalar(cur.s);
+      core.rotation.y = t * 0.12 + f * 0.9 + mx * 0.4;
+      core.rotation.x = Math.sin(t * 0.3) * 0.15 + my * 0.25;
+      rings.forEach(function (r, idx) { r.rotation.z += r.userData.sp * 0.01 * (idx % 2 ? -1 : 1); r.rotation.x += 0.0015; });
+      orbiters.forEach(function (o) {
+        var d = o.userData, ang = d.a + t * d.sp;
+        o.position.set(Math.cos(ang) * d.r, Math.sin(ang * 1.3 + d.t) * 0.9, Math.sin(ang) * d.r); o.rotation.y = t * 2;
+      });
+
+      var sp = window.scrollY, sf = sp * 0.0032;
+      points.rotation.y = t * 0.02 + mx * 0.05;
+      points.position.y = sf * 2.4;
+      crystals.forEach(function (c, ix) {
+        var d = c.userData;
+        c.position.set(d.x + mx * d.depth, d.y + sf * 3.0 * d.depth * 1.6 - 8 + Math.sin(t * d.s + ix) * 0.3, d.z);
+        c.rotation.x = t * d.s; c.rotation.y = t * d.s * 0.7;
+      });
+
+      camera.position.x = mx * 0.35; camera.position.y = -my * 0.25; camera.lookAt(0, 0, 0);
+
+      if (!coarse) { gx += (gtx - gx) * 0.12; gy += (gty - gy) * 0.12; glow.style.transform = "translate(" + gx + "px," + gy + "px)"; }
+      renderer.render(scene, camera);
+      if (!reduce) requestAnimationFrame(frame);
+    }
+    frame();
+    if (reduce) window.addEventListener("scroll", frame, { passive: true });
+  } catch (err) { /* page still works without the WebGL scene */ }
+})();
+</script>
+
+</body></html>
